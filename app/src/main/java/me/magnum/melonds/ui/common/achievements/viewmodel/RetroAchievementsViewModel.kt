@@ -18,7 +18,9 @@ import me.magnum.melonds.ui.romdetails.model.AchievementBucketUiModel
 import me.magnum.melonds.ui.romdetails.model.AchievementSetUiModel
 import me.magnum.melonds.ui.romdetails.model.RomAchievementsSummary
 import me.magnum.melonds.ui.romdetails.model.RomRetroAchievementsUiState
+import me.magnum.rcheevosapi.exception.UserTokenExpiredException
 import me.magnum.rcheevosapi.model.RAAchievement
+import me.magnum.rcheevosapi.model.RAUserAuth
 
 abstract class RetroAchievementsViewModel (
     private val retroAchievementsRepository: RetroAchievementsRepository,
@@ -43,29 +45,38 @@ abstract class RetroAchievementsViewModel (
     private fun loadAchievements() {
         achievementLoadJob?.cancel()
         achievementLoadJob = viewModelScope.launch {
-            if (retroAchievementsRepository.isUserAuthenticated()) {
-                val forHardcoreMode = settingsRepository.isRetroAchievementsHardcoreEnabled()
-                retroAchievementsRepository.getUserGameData(getRom().retroAchievementsHash, forHardcoreMode).fold(
-                    onSuccess = { userGameData ->
-                        val sets = userGameData?.sets?.map { set ->
-                            AchievementSetUiModel(
-                                setId = set.id.id,
-                                setTitle = set.title,
-                                setType = set.type,
-                                setIcon = set.iconUrl,
-                                setSummary = buildAchievementsSummary(forHardcoreMode, set.achievements),
-                                buckets = buildAchievementBuckets(set.achievements),
-                            )
-                        }
-                        _uiState.value = RomRetroAchievementsUiState.Ready(sets.orEmpty())
-                    },
-                    onFailure = {
-                        ensureActive()
-                        _uiState.value = RomRetroAchievementsUiState.AchievementLoadError
-                    },
-                )
-            } else {
-                _uiState.value = RomRetroAchievementsUiState.LoggedOut
+            val userAuth = retroAchievementsRepository.getUserAuthentication()
+            _uiState.value = when (userAuth) {
+                is RAUserAuth.Authenticated -> {
+                    val forHardcoreMode = settingsRepository.isRetroAchievementsHardcoreEnabled()
+                    retroAchievementsRepository.getUserGameData(getRom().retroAchievementsHash, forHardcoreMode).fold(
+                        onSuccess = { userGameData ->
+                            val sets = userGameData?.sets?.map { set ->
+                                AchievementSetUiModel(
+                                    setId = set.id.id,
+                                    setTitle = set.title,
+                                    setType = set.type,
+                                    setIcon = set.iconUrl,
+                                    setSummary = buildAchievementsSummary(forHardcoreMode, set.achievements),
+                                    buckets = buildAchievementBuckets(set.achievements),
+                                )
+                            }
+                            RomRetroAchievementsUiState.Ready(sets.orEmpty())
+                        },
+                        onFailure = {
+                            ensureActive()
+                            if (it is UserTokenExpiredException) {
+                                val userAuth = retroAchievementsRepository.getUserAuthentication()
+                                val existingUsername = (userAuth as? RAUserAuth.AuthenticationExpired)?.username
+                                RomRetroAchievementsUiState.LoggedOut(existingUsername)
+                            } else {
+                                RomRetroAchievementsUiState.AchievementLoadError
+                            }
+                        },
+                    )
+                }
+                is RAUserAuth.AuthenticationExpired -> RomRetroAchievementsUiState.LoggedOut(userAuth.username)
+                null -> RomRetroAchievementsUiState.LoggedOut(null)
             }
         }
     }

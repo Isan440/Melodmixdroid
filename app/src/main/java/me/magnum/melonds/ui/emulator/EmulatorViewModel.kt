@@ -12,6 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.isActive
@@ -82,6 +84,8 @@ import me.magnum.melonds.ui.emulator.model.ToastEvent
 import me.magnum.melonds.ui.emulator.rewind.model.RewindSaveState
 import me.magnum.melonds.ui.emulator.rom.RomPauseMenuOption
 import me.magnum.melonds.utils.EventSharedFlow
+import me.magnum.rcheevosapi.exception.UserTokenExpiredException
+import me.magnum.rcheevosapi.model.RAUserAuth
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -146,8 +150,8 @@ class EmulatorViewModel @Inject constructor(
     private val _toastEvent = EventSharedFlow<ToastEvent>()
     val toastEvent = _toastEvent.asSharedFlow()
 
-    private val _raIntegrationEvent = EventSharedFlow<RAIntegrationEvent>()
-    val integrationEvent = _raIntegrationEvent.asSharedFlow()
+    private val _raIntegrationEvent = Channel<RAIntegrationEvent>(Channel.UNLIMITED)
+    val integrationEvent = _raIntegrationEvent.receiveAsFlow()
 
     val pendingSubmissionsSummary = retroAchievementsSubmissionHandler.getPendingSubmissionsSummaryFlow()
 
@@ -788,8 +792,11 @@ class EmulatorViewModel @Inject constructor(
     }
 
     private suspend fun getRomAchievementData(rom: Rom): GameAchievementData {
-        if (!retroAchievementsRepository.isUserAuthenticated()) {
-            return GameAchievementData.withDisabledRetroAchievementsIntegration(GameAchievementData.IntegrationStatus.DISABLED_NOT_LOGGED_IN)
+        val userAuth = retroAchievementsRepository.getUserAuthentication()
+        when (userAuth) {
+            is RAUserAuth.Authenticated -> { /* no-op */ }
+            is RAUserAuth.AuthenticationExpired -> return GameAchievementData.withDisabledRetroAchievementsIntegration(GameAchievementData.IntegrationStatus.DISABLED_LOGIN_EXPIRED)
+            null -> return GameAchievementData.withDisabledRetroAchievementsIntegration(GameAchievementData.IntegrationStatus.DISABLED_NOT_LOGGED_IN)
         }
 
         return retroAchievementsRepository.getUserGameData(rom.retroAchievementsHash, emulatorSession.isRetroAchievementsHardcoreModeEnabled).fold(
@@ -924,7 +931,9 @@ class EmulatorViewModel @Inject constructor(
             emulatorSession.updateRetroAchievementsIntegrationStatus(achievementData.retroAchievementsIntegrationStatus)
             if (!achievementData.isRetroAchievementsIntegrationEnabled) {
                 if (achievementData.retroAchievementsIntegrationStatus == GameAchievementData.IntegrationStatus.DISABLED_LOAD_ERROR) {
-                    _raIntegrationEvent.tryEmit(RAIntegrationEvent.Failed(achievementData.icon))
+                    _raIntegrationEvent.trySend(RAIntegrationEvent.Failed(achievementData.icon))
+                } else if (achievementData.retroAchievementsIntegrationStatus == GameAchievementData.IntegrationStatus.DISABLED_LOGIN_EXPIRED) {
+                    _raIntegrationEvent.trySend(RAIntegrationEvent.LoginExpired(achievementData.icon))
                 }
 
                 return@launch
@@ -937,7 +946,11 @@ class EmulatorViewModel @Inject constructor(
                 val isHardcoreModeEnabled = emulatorSession.isRetroAchievementsHardcoreModeEnabled
                 val startResult = retroAchievementsRepository.startSession(rom.retroAchievementsHash, isHardcoreModeEnabled)
                 if (startResult.isFailure) {
-                    _raIntegrationEvent.tryEmit(RAIntegrationEvent.Failed(achievementData.icon))
+                    if (startResult.exceptionOrNull() is UserTokenExpiredException) {
+                        _raIntegrationEvent.trySend(RAIntegrationEvent.LoginExpired(achievementData.icon))
+                    } else {
+                        _raIntegrationEvent.trySend(RAIntegrationEvent.Failed(achievementData.icon))
+                    }
                 } else {
                     launch {
                         retroAchievementsSubmissionHandler.startEmulatorSession().collect(_achievementsEvent)
@@ -945,7 +958,7 @@ class EmulatorViewModel @Inject constructor(
 
                     emulatorManager.setupRetroAchievements(achievementData)
                     if (achievementData.hasAchievements) {
-                        _raIntegrationEvent.tryEmit(
+                        _raIntegrationEvent.trySend(
                             RAIntegrationEvent.Loaded(
                                 icon = achievementData.icon,
                                 unlockedAchievements = achievementData.unlockedAchievementCount,
@@ -953,7 +966,7 @@ class EmulatorViewModel @Inject constructor(
                             )
                         )
                     } else {
-                        _raIntegrationEvent.tryEmit(RAIntegrationEvent.LoadedNoAchievements(achievementData.icon))
+                        _raIntegrationEvent.trySend(RAIntegrationEvent.LoadedNoAchievements(achievementData.icon))
                     }
 
                     delay(30.seconds)

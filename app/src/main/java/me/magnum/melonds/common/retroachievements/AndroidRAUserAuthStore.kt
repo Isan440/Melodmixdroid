@@ -12,7 +12,7 @@ class AndroidRAUserAuthStore(private val sharedPreferences: SharedPreferences) :
         const val TOKEN_KEY = "ra_token"
     }
 
-    override suspend fun storeUserAuth(userAuth: RAUserAuth) {
+    override suspend fun storeUserAuth(userAuth: RAUserAuth.Authenticated) {
         sharedPreferences.edit {
             putString(USERNAME_KEY, userAuth.username)
             putString(TOKEN_KEY, userAuth.token)
@@ -21,14 +21,20 @@ class AndroidRAUserAuthStore(private val sharedPreferences: SharedPreferences) :
 
     override suspend fun getUserAuth(): RAUserAuth? {
         val username = sharedPreferences.getString(USERNAME_KEY, null) ?: return null
-        val token = sharedPreferences.getString(TOKEN_KEY, null) ?: return null
+        val token = sharedPreferences.getString(TOKEN_KEY, null) ?: return RAUserAuth.AuthenticationExpired(username)
 
-        return RAUserAuth(username, token)
+        return RAUserAuth.Authenticated(username, token)
     }
 
     override suspend fun clearUserAuth() {
         sharedPreferences.edit {
             remove(USERNAME_KEY)
+            remove(TOKEN_KEY)
+        }
+    }
+
+    override suspend fun clearUserToken() {
+        sharedPreferences.edit {
             remove(TOKEN_KEY)
         }
     }

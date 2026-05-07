@@ -156,7 +156,7 @@ private fun PreviewRomScreen() {
                     layoutName = "Default",
                 ),
             ),
-            retroAchievementsUiState = RomRetroAchievementsUiState.LoggedOut,
+            retroAchievementsUiState = RomRetroAchievementsUiState.LoggedOut(null),
             onNavigateBack = { },
             onLaunchRom = { },
             onRomConfigUpdate = { },

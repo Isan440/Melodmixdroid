@@ -64,7 +64,7 @@ class AndroidRetroAchievementsRepository(
     }
 
     override suspend fun isUserAuthenticated(): Boolean {
-        return raUserAuthStore.getUserAuth() != null
+        return raUserAuthStore.getUserAuth() is RAUserAuth.Authenticated
     }
 
     override suspend fun getUserAuthentication(): RAUserAuth? {

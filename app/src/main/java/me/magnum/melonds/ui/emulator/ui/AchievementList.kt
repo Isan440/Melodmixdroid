@@ -180,7 +180,7 @@ fun AchievementList(
                 )
             }
             RomRetroAchievementsUiState.AchievementLoadError,
-            RomRetroAchievementsUiState.LoggedOut,
+            is RomRetroAchievementsUiState.LoggedOut,
             RomRetroAchievementsUiState.LoginError -> {
                 LoadError(
                     modifier = Modifier.widthIn(max = 640.dp).padding(32.dp),

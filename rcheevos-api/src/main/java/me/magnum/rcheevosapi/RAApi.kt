@@ -1,6 +1,7 @@
 package me.magnum.rcheevosapi
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.InternalSerializationApi
@@ -20,6 +21,7 @@ import me.magnum.rcheevosapi.dto.UserUnlocksDto
 import me.magnum.rcheevosapi.dto.mapper.mapToModel
 import me.magnum.rcheevosapi.exception.UnsuccessfulRequestException
 import me.magnum.rcheevosapi.exception.UserNotAuthenticatedException
+import me.magnum.rcheevosapi.exception.UserTokenExpiredException
 import me.magnum.rcheevosapi.model.RAAwardAchievementResponse
 import me.magnum.rcheevosapi.model.RAGame
 import me.magnum.rcheevosapi.model.RAGameId
@@ -86,7 +88,7 @@ class RAApi(
                 PARAMETER_PASSWORD to password,
             )
         ).onSuccess {
-            userAuthStore.storeUserAuth(RAUserAuth(username, it.token))
+            userAuthStore.storeUserAuth(RAUserAuth.Authenticated(username, it.token))
         }.map { }
     }
 
@@ -101,7 +103,10 @@ class RAApi(
     }
 
     suspend fun getUserUnlockedAchievements(gameId: RAGameId, forHardcoreMode: Boolean): Result<List<Long>> {
-        val userAuth = userAuthStore.getUserAuth() ?: return Result.failure(UserNotAuthenticatedException())
+        val userAuth = userAuthStore.getUserAuth()
+        if (userAuth !is RAUserAuth.Authenticated) {
+            return Result.failure(UserNotAuthenticatedException())
+        }
 
         return get<UserUnlocksDto>(
             mapOf(
@@ -117,7 +122,10 @@ class RAApi(
     }
 
     suspend fun getGameAchievementSets(gameHash: String): Result<RAGame> {
-        val userAuth = userAuthStore.getUserAuth() ?: return Result.failure(UserNotAuthenticatedException())
+        val userAuth = userAuthStore.getUserAuth()
+        if (userAuth !is RAUserAuth.Authenticated) {
+            return Result.failure(UserNotAuthenticatedException())
+        }
 
         return get<GameAchievementSetsDto>(
             mapOf(
@@ -132,7 +140,10 @@ class RAApi(
     }
 
     suspend fun startSession(gameId: RAGameId, gameHash: String, forHardcoreMode: Boolean): Result<Unit> {
-        val userAuth = userAuthStore.getUserAuth() ?: return Result.failure(UserNotAuthenticatedException())
+        val userAuth = userAuthStore.getUserAuth()
+        if (userAuth !is RAUserAuth.Authenticated) {
+            return Result.failure(UserNotAuthenticatedException())
+        }
 
         return post(
             mapOf(
@@ -148,7 +159,10 @@ class RAApi(
     }
 
     suspend fun awardAchievement(achievementId: Long, forHardcoreMode: Boolean): Result<RAAwardAchievementResponse> {
-        val userAuth = userAuthStore.getUserAuth() ?: return Result.failure(UserNotAuthenticatedException())
+        val userAuth = userAuthStore.getUserAuth()
+        if (userAuth !is RAUserAuth.Authenticated) {
+            return Result.failure(UserNotAuthenticatedException())
+        }
 
         val signature = signatureProvider.provideAchievementSignature(achievementId, userAuth, forHardcoreMode)
 
@@ -177,7 +191,10 @@ class RAApi(
     }
 
     suspend fun submitLeaderboardEntry(leaderboardId: Long, value: Int): Result<RASubmitLeaderboardEntryResponse> {
-        val userAuth = userAuthStore.getUserAuth() ?: return Result.failure(UserNotAuthenticatedException())
+        val userAuth = userAuthStore.getUserAuth()
+        if (userAuth !is RAUserAuth.Authenticated) {
+            return Result.failure(UserNotAuthenticatedException())
+        }
 
         val signature = signatureProvider.provideLeaderboardSignature(leaderboardId, value, userAuth)
 
@@ -200,8 +217,10 @@ class RAApi(
     }
 
     suspend fun sendPing(gameId: RAGameId, gameHash: String, forHardcoreMode: Boolean, richPresenceDescription: String?): Result<Unit> {
-        // NOTE: Call this every 2 minutes if rich presence is enabled or every 4 minutes if not
-        val userAuth = userAuthStore.getUserAuth() ?: return Result.failure(UserNotAuthenticatedException())
+        val userAuth = userAuthStore.getUserAuth()
+        if (userAuth !is RAUserAuth.Authenticated) {
+            return Result.failure(UserNotAuthenticatedException())
+        }
 
         val parameters = mutableMapOf(
             PARAMETER_REQUEST to REQUEST_PING,
@@ -230,32 +249,28 @@ class RAApi(
     private suspend fun <T : Any> get(
         responseClass: KClass<T>,
         parameters: Map<String, String>,
-        errorHandler: (String?) -> Unit = { throw UnsuccessfulRequestException(it ?: "Unknown reason") },
+        errorHandler: (String?) -> Unit,
     ): Result<T> = withContext(Dispatchers.IO) {
         val request = buildGetRequest(parameters)
         suspendRunCatching {
             executeRequest(request)
         }.suspendMapCatching { response ->
-            if (response.isSuccessful) {
-                val body = response.body.charStream().use {
-                    it.readText()
-                }
-                val responseJson = Json.parseToJsonElement(body).jsonObject
-                val isSuccessful = responseJson["Success"]!!.jsonPrimitive.boolean
-                if (!isSuccessful) {
-                    val reason = responseJson["Error"]!!.jsonPrimitive.toString()
-                    // The error handler may choose to ignore the error
-                    errorHandler.invoke(reason)
-                }
+            val body = response.body.charStream().use {
+                it.readText()
+            }
+            val responseJson = Json.parseToJsonElement(body).jsonObject
+            val isSuccessful = responseJson["Success"]!!.jsonPrimitive.boolean
+            if (!isSuccessful) {
+                val reason = responseJson["Error"]!!.jsonPrimitive.toString()
+                // The error handler may choose to ignore the error
+                errorHandler.invoke(reason)
+            }
 
-                if (responseClass == Unit::class) {
-                    // Ignore response. Don't parse anything
-                    Unit as T
-                } else {
-                    json.decodeFromJsonElement(responseClass.serializer(), responseJson)
-                }
+            if (responseClass == Unit::class) {
+                // Ignore response. Don't parse anything
+                Unit as T
             } else {
-                throw Exception(response.message)
+                json.decodeFromJsonElement(responseClass.serializer(), responseJson)
             }
         }
     }
@@ -271,32 +286,28 @@ class RAApi(
     private suspend fun <T : Any> post(
         responseClass: KClass<T>,
         parameters: Map<String, String>,
-        errorHandler: (String?) -> Unit = { throw UnsuccessfulRequestException(it ?: "Unknown reason") },
+        errorHandler: (String?) -> Unit,
     ): Result<T> = withContext(Dispatchers.IO) {
         val request = buildPostRequest(parameters)
         suspendRunCatching {
             executeRequest(request)
         }.suspendMapCatching { response ->
-            if (response.isSuccessful) {
-                val body = response.body.charStream().use {
-                    it.readText()
-                }
-                val responseJson = Json.parseToJsonElement(body).jsonObject
-                val isSuccessful = responseJson["Success"]!!.jsonPrimitive.boolean
-                if (!isSuccessful) {
-                    val reason = responseJson["Error"]!!.jsonPrimitive.toString()
-                    // The error handler may choose to ignore the error
-                    errorHandler.invoke(reason)
-                }
+            val body = response.body.charStream().use {
+                it.readText()
+            }
+            val responseJson = Json.parseToJsonElement(body).jsonObject
+            val isSuccessful = responseJson["Success"]!!.jsonPrimitive.boolean
+            if (!isSuccessful) {
+                val reason = responseJson["Error"]!!.jsonPrimitive.toString()
+                // The error handler may choose to ignore the error
+                errorHandler.invoke(reason)
+            }
 
-                if (responseClass == Unit::class) {
-                    // Ignore response. Don't parse anything
-                    Unit as T
-                } else {
-                    json.decodeFromJsonElement(responseClass.serializer(), responseJson)
-                }
+            if (responseClass == Unit::class) {
+                // Ignore response. Don't parse anything
+                Unit as T
             } else {
-                throw Exception(response.message)
+                json.decodeFromJsonElement(responseClass.serializer(), responseJson)
             }
         }
     }
@@ -333,7 +344,18 @@ class RAApi(
             }
 
             override fun onResponse(call: Call, response: Response) {
-                continuation.resume(response)
+                if (response.isSuccessful) {
+                    continuation.resume(response)
+                } else {
+                    if (response.code == 401) {
+                        runBlocking {
+                            userAuthStore.clearUserToken()
+                        }
+                        continuation.resumeWithException(UserTokenExpiredException())
+                    } else {
+                        continuation.resumeWithException(Exception(response.message))
+                    }
+                }
             }
         })
 
