@@ -1,11 +1,11 @@
 package me.magnum.melonds.ui.settings.fragments
 
 import android.app.ActivityManager
+import android.os.Build
 import android.os.Bundle
 import androidx.core.content.getSystemService
 import androidx.preference.ListPreference
 import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
 import dagger.hilt.android.AndroidEntryPoint
 import me.magnum.melonds.R
 import me.magnum.melonds.common.DirectoryAccessValidator
@@ -35,6 +35,7 @@ class VideoPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentTit
 
     private val softwareRendererPreferences = mutableListOf<Preference>()
     private val openGlRendererPreferences = mutableListOf<Preference>()
+    private val computeRendererPreferences = mutableListOf<Preference>()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.pref_video, rootKey)
@@ -47,6 +48,10 @@ class VideoPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentTit
             add(findPreference("video_internal_resolution")!!)
         }
 
+        computeRendererPreferences.apply {
+            add(findPreference("video_internal_resolution")!!)
+        }
+
         val rendererPreference = findPreference<ListPreference>("video_renderer")!!
         val dsiCameraSourcePreference = findPreference<ListPreference>("dsi_camera_source")!!
         val dsiCameraImagePreference = findPreference<StoragePickerPreference>("dsi_camera_static_image")!!
@@ -56,6 +61,18 @@ class VideoPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentTit
         rendererPreference.apply {
             val deviceGlesVersion = activityManager?.deviceConfigurationInfo?.reqGlEsVersion ?: 0
             if (deviceGlesVersion >= GLES_3_2) {
+                // Check if the device has a Qualcomm chipset. Only Adreno GPUs are supported for now
+                val isAdrenoGpu = Build.HARDWARE.lowercase() == "qcom"
+                if (!isAdrenoGpu) {
+                    val computeRenderOptionIndex = rendererPreference.entryValues.indexOfFirst { it == VideoRenderer.COMPUTE.name.lowercase() }
+                    rendererPreference.entries = rendererPreference.entries.filterIndexed { index, _ ->
+                        index != computeRenderOptionIndex
+                    }.toTypedArray()
+                    rendererPreference.entryValues = rendererPreference.entryValues.filterIndexed { index, _ ->
+                        index != computeRenderOptionIndex
+                    }.toTypedArray()
+                }
+
                 setOnPreferenceChangeListener { _, newValue ->
                     onRendererPreferenceChanged(newValue as String)
                     true
@@ -81,20 +98,19 @@ class VideoPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentTit
         val newRenderer = enumValueOfIgnoreCase<VideoRenderer>(rendererValue)
         when (newRenderer) {
             VideoRenderer.SOFTWARE -> {
-                softwareRendererPreferences.forEach {
-                    it.isVisible = true
-                }
-                openGlRendererPreferences.forEach {
-                    it.isVisible = false
-                }
+                computeRendererPreferences.forEach { it.isVisible = false }
+                openGlRendererPreferences.forEach { it.isVisible = false }
+                softwareRendererPreferences.forEach { it.isVisible = true }
             }
             VideoRenderer.OPENGL -> {
-                softwareRendererPreferences.forEach {
-                    it.isVisible = false
-                }
-                openGlRendererPreferences.forEach {
-                    it.isVisible = true
-                }
+                softwareRendererPreferences.forEach { it.isVisible = false }
+                computeRendererPreferences.forEach { it.isVisible = false }
+                openGlRendererPreferences.forEach { it.isVisible = true }
+            }
+            VideoRenderer.COMPUTE -> {
+                softwareRendererPreferences.forEach { it.isVisible = false }
+                openGlRendererPreferences.forEach { it.isVisible = false }
+                computeRendererPreferences.forEach { it.isVisible = true }
             }
         }
     }

@@ -10,5 +10,6 @@ data class RendererConfiguration(
     val resolutionScaling get() = when (renderer) {
         VideoRenderer.SOFTWARE -> 1
         VideoRenderer.OPENGL -> internalResolutionScaling
+        VideoRenderer.COMPUTE -> internalResolutionScaling
     }
 }
