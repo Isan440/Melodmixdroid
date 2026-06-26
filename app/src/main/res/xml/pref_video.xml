@@ -46,6 +46,13 @@
             android:entryValues="@array/fps_counter_position_values"
             android:defaultValue="hidden" />
 
+<SwitchPreference
+    android:key="enable_hd_texture"
+    android:title="Enable HD Texture"
+    android:summary="Load high-definition texture packs"
+    app:iconSpaceReserved="false"
+    android:defaultValue="true"/>
+
     <ListPreference
             android:key="dsi_camera_source"
             android:title="@string/dsi_camera_source"
