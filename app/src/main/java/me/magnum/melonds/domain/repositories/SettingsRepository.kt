@@ -38,6 +38,12 @@ interface SettingsRepository {
     fun getFpsCounterPosition(): FpsCounterPosition
     fun getDSiCameraSource(): DSiCameraSourceType
     fun getDSiCameraStaticImage(): Uri?
+     
+    fun isHDTextureEnabled(): Flow<Boolean>
+    fun isReplaceTextureEnabled(): Flow<Boolean>
+    fun isDumpTextureEnabled(): Flow<Boolean>
+    fun isAutoDumpTextureEnabled(): Flow<Boolean>
+
 
     fun isSoundEnabled(): Boolean
     fun getAudioLatency(): AudioLatency
