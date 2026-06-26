@@ -53,6 +53,27 @@
     app:iconSpaceReserved="false"
     android:defaultValue="true"/>
 
+<SwitchPreference
+    android:key="replace_texture"
+    android:title="Replace Texture"
+    android:summary="Replace original textures with custom textures"
+    app:iconSpaceReserved="false"
+    android:defaultValue="true"/>
+
+<SwitchPreference
+    android:key="dump_texture"
+    android:title="Dump Texture"
+    android:summary="Dump textures to storage"
+    app:iconSpaceReserved="false"
+    android:defaultValue="false"/>
+
+<SwitchPreference
+    android:key="auto_dump_texture"
+    android:title="Auto Dump All"
+    android:summary="Automatically dump every texture only once"
+    app:iconSpaceReserved="false"
+    android:defaultValue="false"/>
+
     <ListPreference
             android:key="dsi_camera_source"
             android:title="@string/dsi_camera_source"
