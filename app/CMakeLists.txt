@@ -33,6 +33,7 @@ add_library(
         ${ANDROID-CPP}/DSiSupport.cpp
         ${ANDROID-CPP}/EmulatorArgsBuilder.cpp
         ${ANDROID-CPP}/EmulatorMessageQueueJNI.cpp
+        ${ANDROID-CPP}/HDTexture.cpp
         ${ANDROID-CPP}/JniEnvHandler.cpp
         ${ANDROID-CPP}/MelonDS.cpp
         ${ANDROID-CPP}/MelonDSAndroidCameraHandler.cpp
