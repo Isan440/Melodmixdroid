@@ -305,6 +305,30 @@ class SharedPreferencesSettingsRepository(
         }
     }
 
+   override fun isHDTextureEnabled(): Flow<Boolean> {
+        return getOrCreatePreferenceSharedFlow("hd_textures") {
+            preferences.getBoolean("hd_textures", false)
+        }
+    }
+
+   override fun isReplaceTextureEnabled(): Flow<Boolean> {
+        return getOrCreatePreferenceSharedFlow("replace_textures") {
+            preferences.getBoolean("replace_textures", false)
+        }
+    }
+
+   override fun isDumpTextureEnabled(): Flow<Boolean> {
+        return getOrCreatePreferenceSharedFlow("dump_textures") {
+            preferences.getBoolean("dump_textures", false)
+        }
+    }
+
+   override fun isAutoDumpTextureEnabled(): Flow<Boolean> {
+        return getOrCreatePreferenceSharedFlow("auto_dump_textures") {
+            preferences.getBoolean("auto_dump_textures", false)
+        }
+    }
+
     override fun getFpsCounterPosition(): FpsCounterPosition {
         val fpsCounterPreference = preferences.getString("fps_counter_position", "hidden")!!
         return FpsCounterPosition.valueOf(fpsCounterPreference.uppercase())
