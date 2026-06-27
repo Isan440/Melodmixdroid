@@ -100,8 +100,7 @@ class GeneralPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentT
             true
 }
 
-        }
-    }
+}
 
     override fun onResume() {
         super.onResume()
