@@ -91,6 +91,11 @@ class GeneralPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentT
         findPreference<Preference>("restore_settings")?.setOnPreferenceClickListener {
             restoreLauncher.launch(null)
             true
+        findPreference<Preference>("data_folder")?.setOnPreferenceClickListener {
+            Toast.makeText(requireContext(), "Data Folder clicked", Toast.LENGTH_SHORT).show()
+            true
+}
+
         }
     }
 

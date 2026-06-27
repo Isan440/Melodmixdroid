@@ -54,4 +54,13 @@
             android:title="@string/restore_settings"
             app:isPreferenceVisible="@bool/settings_backup_restore_enabled"
             app:iconSpaceReserved="false" />
+
+    <Preference
+            android:key="data_folder"
+            android:title="Data Folder"
+            android:summary="Choose emulator data folder"
+            app:iconSpaceReserved="false" />
+
 </PreferenceScreen>
+
+     
