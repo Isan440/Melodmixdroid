@@ -193,10 +193,9 @@ class FileSystemRomsRepository(
             roms.clear()
         }
 
-        val cacheFile = File(context.filesDir, ROM_DATA_FILE)
-        if (cacheFile.isFile) {
-            cacheFile.delete()
-        }
+        val cacheFile = dataFolderManager.getFile(ROM_DATA_FILE)
+
+                 cacheFile?.delete()
     }
 
     private fun addRom(rom: Rom) {
