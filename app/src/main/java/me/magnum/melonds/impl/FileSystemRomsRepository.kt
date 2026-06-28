@@ -29,6 +29,7 @@ import me.magnum.melonds.utils.FileUtils
 import me.magnum.melonds.utils.SubjectSharedFlow
 import java.io.File
 import java.io.FileReader
+import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.lang.reflect.Type
 import java.util.Date
@@ -284,17 +285,16 @@ class FileSystemRomsRepository(
         ?: return emptyList()
 
     return runCatching {
-
-    gson.fromJson<List<RomDto>>(
-    InputStreamReader(inputStream),
-    romListType
-).map }
-    it.toModel()
-     }
-}.getOrElse {
-    emptyList()
-}
-
+        gson.fromJson<List<RomDto>>(
+            InputStreamReader(inputStream),
+            romListType
+        ).map {
+            it.toModel()
+        }
+    }.getOrElse {
+        emptyList()
+    }
+    }
     private fun saveRomData(romData: List<Rom>) {
         val cacheFile = dataFolderManager.getFile(ROM_DATA_FILE) ?: return
 
@@ -309,10 +309,10 @@ class FileSystemRomsRepository(
                 ?: return
 
     OutputStreamWriter(outputStream).use {
-        it.write(romsJson)
-}
+                it.write(romsJson)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save ROM data", e)
         }
     }
-}
+
