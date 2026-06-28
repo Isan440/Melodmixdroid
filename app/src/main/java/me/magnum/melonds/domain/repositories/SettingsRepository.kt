@@ -28,6 +28,7 @@ interface SettingsRepository {
     fun useCustomBios(): Boolean
     fun getDsBiosDirectory(): Uri?
     fun getDsiBiosDirectory(): Uri?
+    fun getDataFolder(): Uri?
     fun showBootScreen(): Boolean
     fun isJitEnabled(): Boolean
 
@@ -82,6 +83,7 @@ interface SettingsRepository {
 
     fun setDsBiosDirectory(directoryUri: Uri)
     fun setDsiBiosDirectory(directoryUri: Uri)
+    fun setDataFolder(directoryUri: Uri)
     fun addRomSearchDirectory(directoryUri: Uri)
     fun setControllerConfiguration(controllerConfiguration: ControllerConfiguration)
     fun setRomSortingMode(sortingMode: SortingMode)
