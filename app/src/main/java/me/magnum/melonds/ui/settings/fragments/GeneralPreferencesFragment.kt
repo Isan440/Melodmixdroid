@@ -1,5 +1,6 @@
 package me.magnum.melonds.ui.settings.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -53,7 +54,8 @@ class GeneralPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentT
         }
     }
 
-    private val restoreLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+    private val restoreLauncher =
+    registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             lifecycleScope.launch(Dispatchers.IO) {
                 runCatching { settingsBackupManager.restore(uri) }
@@ -67,10 +69,31 @@ class GeneralPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentT
                     }
                     .onFailure {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(requireContext(), R.string.settings_restore_error, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                requireContext(),
+                                R.string.settings_restore_error,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
             }
+        }
+    }
+
+private val dataFolderLauncher =
+    registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            requireContext().contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+
+            Toast.makeText(
+                requireContext(),
+                uri.toString(),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -96,7 +119,7 @@ class GeneralPreferencesFragment : BasePreferenceFragment(), PreferenceFragmentT
 }
 
         findPreference<Preference>("data_folder")?.setOnPreferenceClickListener {
-            Toast.makeText(requireContext(), "Data Folder clicked", Toast.LENGTH_SHORT).show()
+            dataFolderLauncher.launch(null)
             true
 }
 
