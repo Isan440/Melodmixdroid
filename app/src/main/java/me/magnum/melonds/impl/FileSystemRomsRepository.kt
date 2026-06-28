@@ -42,6 +42,9 @@ class FileSystemRomsRepository(
         private val romFileProcessorFactory: RomFileProcessorFactory
 ) : RomsRepository {
 
+        private val dataFolderManager =
+        DataFolderManager(context, settingsRepository)
+
     companion object {
         private const val TAG = "FSRomsRepository"
         private const val EXTERNAL_STORAGE_PROVIDER_AUTHORITY = "com.android.externalstorage.documents"
@@ -273,20 +276,27 @@ class FileSystemRomsRepository(
     }
 
     private fun getCachedRoms(): List<Rom> {
-        val cacheFile = File(context.filesDir, ROM_DATA_FILE)
-        if (!cacheFile.isFile) {
-            return emptyList()
-        }
+    val cacheFile = dataFolderManager.getFile(ROM_DATA_FILE)
+        ?: return emptyList()
 
-        return runCatching {
-            gson.fromJson<List<RomDto>>(FileReader(cacheFile), romListType).map {
-                it.toModel()
-            }
-        }.getOrElse { emptyList() }
-    }
+    val inputStream = context.contentResolver
+        .openInputStream(cacheFile.uri)
+        ?: return emptyList()
+
+    return runCatching {
+
+    gson.fromJson<List<RomDto>>(
+    InputStreamReader(inputStream),
+    romListType
+).map }
+    it.toModel()
+     }
+}.getOrElse {
+    emptyList()
+}
 
     private fun saveRomData(romData: List<Rom>) {
-        val cacheFile = File(context.filesDir, ROM_DATA_FILE)
+        val cacheFile = dataFolderManager.getFile(ROM_DATA_FILE) ?: return
 
         try {
             val romDtos = romData.map {
@@ -294,9 +304,13 @@ class FileSystemRomsRepository(
             }
             val romsJson = gson.toJson(romDtos)
 
-            OutputStreamWriter(cacheFile.outputStream()).use {
-                it.write(romsJson)
-            }
+            val outputStream = context.contentResolver
+                .openOutputStream(cacheFile.uri)
+                ?: return
+
+    OutputStreamWriter(outputStream).use {
+        it.write(romsJson)
+}
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save ROM data", e)
         }

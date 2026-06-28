@@ -269,6 +269,10 @@ class SharedPreferencesSettingsRepository(
         return dirPreference?.toUri()
     }
 
+    override fun getDataFolder(): Uri? {
+        return preferences.getString("data_folder_uri", null)?.toUri()
+    }
+
     override fun showBootScreen(): Boolean {
         return preferences.getBoolean("show_bios", false)
     }
@@ -549,6 +553,12 @@ class SharedPreferencesSettingsRepository(
     override fun setDsiBiosDirectory(directoryUri: Uri) {
         preferences.edit {
             putStringSet("dsi_bios_dir", setOf(directoryUri.toString()))
+        }
+    }
+
+    override fun setDataFolder(directoryUri: Uri) {
+        preferences.edit {
+            putString("data_folder_uri", directoryUri.toString())
         }
     }
 
