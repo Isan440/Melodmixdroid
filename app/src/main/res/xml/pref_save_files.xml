@@ -19,6 +19,14 @@
             app:permissions="read_write"
             app:persistPermissions="true" />
 
+    <me.magnum.melonds.ui.settings.preferences.StoragePickerPreference
+            android:key="screenshot_dir"
+            android:title="Screenshot Directory"
+            app:iconSpaceReserved="false"
+            app:type="directory"
+            app:permissions="read,write"
+            app:persistPermissions="true" />
+
     <ListPreference
             android:key="save_state_location"
             android:title="@string/save_state_location"

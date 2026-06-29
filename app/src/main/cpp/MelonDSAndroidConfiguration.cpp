@@ -27,6 +27,14 @@ MelonDSAndroid::EmulatorConfiguration MelonDSAndroidConfiguration::buildEmulator
     jobject dsiFirmwareUri = env->GetObjectField(emulatorConfiguration, env->GetFieldID(emulatorConfigurationClass, "dsiFirmwareUri", "Landroid/net/Uri;"));
     jobject dsiNandUri = env->GetObjectField(emulatorConfiguration, env->GetFieldID(emulatorConfigurationClass, "dsiNandUri", "Landroid/net/Uri;"));
     jstring internalFilesDir = (jstring) env->GetObjectField(emulatorConfiguration, env->GetFieldID(emulatorConfigurationClass, "internalDirectory", "Ljava/lang/String;"));
+    jobject dataFolderUri = env->GetObjectField(
+    emulatorConfiguration,
+    env->GetFieldID(
+        emulatorConfigurationClass,
+        "dataFolderUri",
+        "Landroid/net/Uri;"
+    )
+);
     jfloat fastForwardMaxSpeed = env->GetFloatField(emulatorConfiguration, env->GetFieldID(emulatorConfigurationClass, "fastForwardSpeedMultiplier", "F"));
     jboolean enableRewind = env->GetBooleanField(emulatorConfiguration, env->GetFieldID(emulatorConfigurationClass, "rewindEnabled", "Z"));
     jint rewindPeriodSeconds = env->GetIntField(emulatorConfiguration, env->GetFieldID(emulatorConfigurationClass, "rewindPeriodSeconds", "I"));
@@ -62,6 +70,13 @@ MelonDSAndroid::EmulatorConfiguration MelonDSAndroidConfiguration::buildEmulator
     const char* dsiFirmwarePath = dsiFirmwareUri ? env->GetStringUTFChars(dsiFirmwareString, &isCopy) : nullptr;
     const char* dsiNandPath = dsiNandUri ? env->GetStringUTFChars(dsiNandString, &isCopy) : nullptr;
     const char* internalDir = env->GetStringUTFChars(internalFilesDir, nullptr);
+    jstring dataFolderString = dataFolderUri
+    ? (jstring) env->CallObjectMethod(dataFolderUri, uriToStringMethod)
+    : nullptr;
+
+    const char* dataFolderPath = dataFolderString
+    ? env->GetStringUTFChars(dataFolderString, &isCopy)
+    : nullptr;
 
     MelonDSAndroid::EmulatorConfiguration finalEmulatorConfiguration;
     finalEmulatorConfiguration.userInternalFirmwareAndBios = !useCustomBios;
@@ -73,6 +88,7 @@ MelonDSAndroid::EmulatorConfiguration MelonDSAndroidConfiguration::buildEmulator
     finalEmulatorConfiguration.dsiFirmwarePath = const_cast<char*>(dsiFirmwarePath);
     finalEmulatorConfiguration.dsiNandPath = const_cast<char*>(dsiNandPath);
     finalEmulatorConfiguration.internalFilesDir = const_cast<char*>(internalDir);
+    finalEmulatorConfiguration.dataFolderPath = const_cast<char*>(dataFolderPath);
     finalEmulatorConfiguration.fastForwardSpeedMultiplier = fastForwardMaxSpeed;
     finalEmulatorConfiguration.showBootScreen = showBootScreen;
     finalEmulatorConfiguration.useJit = useJit;

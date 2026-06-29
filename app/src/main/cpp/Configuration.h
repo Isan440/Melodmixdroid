@@ -71,6 +71,7 @@ typedef struct
     char* dsiFirmwarePath;
     char* dsiNandPath;
     char* internalFilesDir;
+    char* dataFolderPath;
     float fastForwardSpeedMultiplier;
     bool showBootScreen;
     bool useJit;

@@ -153,6 +153,7 @@ class SharedPreferencesSettingsRepository(
             dsiFirmwareUri = dsiDirDocument?.findFile("firmware.bin")?.uri,
             dsiNandUri = dsiDirDocument?.findFile("nand.bin")?.uri,
             internalDirectory = context.filesDir.absolutePath,
+            dataFolderUri = null,
             fastForwardSpeedMultiplier = getFastForwardSpeedMultiplier(),
             rewindEnabled = isRewindEnabled(),
             rewindPeriodSeconds = getRewindPeriod(),
@@ -403,6 +404,11 @@ class SharedPreferencesSettingsRepository(
 
     override fun getSaveFileDirectory(): Uri? {
         val dirPreference = preferences.getStringSet("sram_dir", null)?.firstOrNull()
+        return dirPreference?.toUri()
+    }
+
+    override fun getScreenshotDirectory(): Uri? {
+        val dirPreference = preferences.getStringSet("screenshot_dir", null)?.firstOrNull()
         return dirPreference?.toUri()
     }
 

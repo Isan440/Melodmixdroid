@@ -54,6 +54,7 @@ interface SettingsRepository {
     fun getRomSortingOrder(): SortingOrder
     fun saveNextToRomFile(): Boolean
     fun getSaveFileDirectory(): Uri?
+    fun getScreenshotDirectory(): Uri?
     fun getSaveFileDirectory(rom: Rom): Uri
     fun getSaveStateLocation(rom: Rom): SaveStateLocation
     fun getSaveStateDirectory(rom: Rom): Uri?

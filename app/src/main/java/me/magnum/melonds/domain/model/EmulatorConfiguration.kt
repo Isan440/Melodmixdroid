@@ -13,6 +13,7 @@ data class EmulatorConfiguration(
         val dsiFirmwareUri: Uri?,
         val dsiNandUri: Uri?,
         val internalDirectory: String,
+        val dataFolderUri: Uri?,
         val fastForwardSpeedMultiplier: Float,
         val rewindEnabled: Boolean,
         val rewindPeriodSeconds: Int,
