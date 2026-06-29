@@ -25,15 +25,16 @@ class SramProvider(
         ?: rootDocument.createDirectory(romName)
         ?: throw SramLoadException("Cannot create ROM folder")
        
-        romFolder.findFile("textures")
+        val texturesFolder = romFolder.findFile("textures")
         ?: romFolder.createDirectory("textures")
-
-        romFolder.findFile("replacements")
-        ?: romFolder.createDirectory("replacements")
-
-        romFolder.findFile("dumps")
-        ?: romFolder.createDirectory("dumps")
+        ?: throw SramLoadException("Cannot create textures folder")
        
+        texturesFolder.findFile("replacements")
+        ?: texturesFolder.createDirectory("replacements")
+
+        texturesFolder.findFile("dumps")
+        ?: texturesFolder.createDirectory("dumps")
+
         val sramDocument = romFolder.findFile(sramFileName)
         return if (sramDocument != null) {
             sramDocument.uri
