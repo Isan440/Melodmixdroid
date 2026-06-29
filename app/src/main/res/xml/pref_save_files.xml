@@ -24,7 +24,7 @@
             android:title="Screenshot Directory"
             app:iconSpaceReserved="false"
             app:type="directory"
-            app:permissions="read,write"
+            app:permissions="read_write"
             app:persistPermissions="true" />
 
     <ListPreference
