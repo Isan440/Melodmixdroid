@@ -181,10 +181,6 @@ class SharedPreferencesSettingsRepository(
             micSource = getMicSource(),
             firmwareConfiguration = getFirmwareConfiguration(),
             rendererConfiguration = renderConfigurationFlow.first(),
-            hdTextureEnabled = isHDTextureEnabled().first(),
-            replaceTextureEnabled = isReplaceTextureEnabled().first(),
-            dumpTextureEnabled = isDumpTextureEnabled().first(),
-            autoDumpTextureEnabled = isAutoDumpTextureEnabled().first()
         )
     }
 
