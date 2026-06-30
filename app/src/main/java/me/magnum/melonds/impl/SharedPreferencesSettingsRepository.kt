@@ -99,8 +99,21 @@ class SharedPreferencesSettingsRepository(
             getVideoFiltering(),
             isThreadedRenderingEnabled(),
             getVideoInternalResolutionScaling(),
-        ) { renderer, filtering, threadedRenderingEnabled, resolutionScaling ->
-            RendererConfiguration(renderer, filtering, threadedRenderingEnabled, resolutionScaling)
+            isHDTextureEnabled(),
+            isReplaceTextureEnabled(),
+            isDumpTextureEnabled(),
+            isAutoDumpTextureEnabled(),
+
+            ) {
+    renderer,
+    filtering,
+    threadedRenderingEnabled,
+    resolutionScaling,
+    hdTextureEnabled,
+    replaceTextureEnabled,
+    dumpTextureEnabled,
+    autoDumpTextureEnabled ->     
+            RendererConfiguration(renderer, filtering, threadedRenderingEnabled, resolutionScaling, hdTextureEnabled, replaceTextureEnabled, dumpTextureEnabled, autoDumpTextureEnabled)
         }.conflate().shareIn(preferencesCoroutineScope, SharingStarted.Lazily, replay = 1)
     }
 
@@ -168,6 +181,10 @@ class SharedPreferencesSettingsRepository(
             micSource = getMicSource(),
             firmwareConfiguration = getFirmwareConfiguration(),
             rendererConfiguration = renderConfigurationFlow.first(),
+            hdTextureEnabled = isHDTextureEnabled().first(),
+            replaceTextureEnabled = isReplaceTextureEnabled().first(),
+            dumpTextureEnabled = isDumpTextureEnabled().first(),
+            autoDumpTextureEnabled = isAutoDumpTextureEnabled().first()
         )
     }
 

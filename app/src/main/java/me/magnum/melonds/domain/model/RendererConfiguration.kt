@@ -5,6 +5,11 @@ data class RendererConfiguration(
     val videoFiltering: VideoFiltering,
     val threadedRendering: Boolean,
     private val internalResolutionScaling: Int,
+
+    val hdTextureEnabled: Boolean,
+    val replaceTextureEnabled: Boolean,
+    val dumpTextureEnabled: Boolean,
+    val autoDumpTextureEnabled: Boolean,
 ) {
 
     val resolutionScaling get() = when (renderer) {
