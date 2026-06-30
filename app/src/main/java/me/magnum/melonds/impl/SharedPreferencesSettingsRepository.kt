@@ -104,16 +104,19 @@ class SharedPreferencesSettingsRepository(
             isDumpTextureEnabled(),
             isAutoDumpTextureEnabled(),
 
-            ) {
-    renderer,
-    filtering,
-    threadedRenderingEnabled,
-    resolutionScaling,
-    hdTextureEnabled,
-    replaceTextureEnabled,
-    dumpTextureEnabled,
-    autoDumpTextureEnabled ->     
-            RendererConfiguration(renderer, filtering, threadedRenderingEnabled, resolutionScaling, hdTextureEnabled, replaceTextureEnabled, dumpTextureEnabled, autoDumpTextureEnabled)
+        ) { values ->
+            RendererConfiguration(
+                  values[0] as VideoRenderer,
+                  values[1] as VideoFiltering,
+                  values[2] as Boolean,
+                  values[3] as Int,
+                  values[4] as Boolean,
+                  values[5] as Boolean,
+                  values[6] as Boolean,
+                  values[7] as Boolean,
+    )     
+    }          
+
         }.conflate().shareIn(preferencesCoroutineScope, SharingStarted.Lazily, replay = 1)
     }
 
