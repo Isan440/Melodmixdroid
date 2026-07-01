@@ -18,17 +18,22 @@ class SramProvider(
         val romDocument = uriHandler.getUriDocument(rom.uri)
 
         val romFileName = romDocument?.name ?: throw SramLoadException("Cannot determine SRAM file name: ${romDocument?.uri}")
+        val romName = romFileName.substringBeforeLast('.')
         val sramFileName = romFileName.replaceAfterLast('.', "sav", "$romFileName.sav")
 
-        val sramDocument = rootDocument.findFile(sramFileName)
-        return if (sramDocument != null) {
-            sramDocument.uri
+        val romFolder = rootDocument.findFile(romName)
+                  ?: rootDocument.createDirectory(romName)
+                  ?: throw SramLoadException("Cannot create ROM folder")
+
+        val sramDocument = romFolder.findFile(sramFileName)
+                return if (sramDocument != null) {
+                sramDocument.uri
         } else {
-            val newSramUri = rootDocument.createFile("application/*", sramFileName)?.uri
+            val newSramUri = romFolder.createFile(("application/*", sramFileName)?.uri
             if (newSramUri == null) {
                 // It looks like some devices create the file just fine but return null. As a fallback, check if the SRAM file was actually created or not
                 // Reference: https://www.ghisler.ch/board/viewtopic.php?p=370089#p370089
-                rootDocument.findFile(sramFileName)?.uri ?: throw SramLoadException("Could not create temporary SRAM file at ${rootDocument.uri}")
+                romFolder.findFile(sramFileName)?.uri ?: throw SramLoadException("Could not create temporary SRAM file at ${rootDocument.uri}")
             } else {
                 newSramUri
             }
