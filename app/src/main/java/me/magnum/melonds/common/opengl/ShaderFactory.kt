@@ -2,19 +2,39 @@ package me.magnum.melonds.common.opengl
 
 import android.opengl.GLES30
 import android.util.Log
+import java.io.File
 
 object ShaderFactory {
     fun createShaderProgram(source: ShaderProgramSource): Shader {
-        val vertexShader = createShader(GLES30.GL_VERTEX_SHADER, source.vertexShaderSource)
-        val fragmentShader = createShader(GLES30.GL_FRAGMENT_SHADER, source.fragmentShaderSource)
-        val shaderProgram = createShaderProgram(vertexShader, fragmentShader)
-        val textureFilter = when (source.textureFiltering) {
-            ShaderProgramSource.TextureFiltering.NEAREST -> GLES30.GL_NEAREST
-            ShaderProgramSource.TextureFiltering.LINEAR -> GLES30.GL_LINEAR
-        }
+    val shaderSource = source
 
-        return Shader(vertexShader, fragmentShader, shaderProgram, textureFilter)
+    val vertexCode =
+        ExternalShaderLoader.loadShader(App.context, "vertex.glsl")
+        ?: shaderSource.vertexShaderSource    
+
+    val fragmentCode =
+        ExternalShaderLoader.loadShader(App.context, "fragment.glsl")
+        ?: shaderSource.fragmentShaderSource    
+
+    val vertexShader = createShader(
+        GLES30.GL_VERTEX_SHADER,
+        vertexCode
+    )
+
+    val fragmentShader = createShader(
+        GLES30.GL_FRAGMENT_SHADER,
+        fragmentCode
+    )
+
+    val shaderProgram = createShaderProgram(vertexShader, fragmentShader)
+
+    val textureFilter = when (source.textureFiltering) {
+        ShaderProgramSource.TextureFiltering.NEAREST -> GLES30.GL_NEAREST
+        ShaderProgramSource.TextureFiltering.LINEAR -> GLES30.GL_LINEAR
     }
+
+    return Shader(vertexShader, fragmentShader, shaderProgram, textureFilter)
+}
 
     private fun createShaderProgram(vertexShader: Int, fragmentShader: Int): Int {
         val program = GLES30.glCreateProgram()

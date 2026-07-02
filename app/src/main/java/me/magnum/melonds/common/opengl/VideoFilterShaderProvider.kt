@@ -14,6 +14,7 @@ object VideoFilterShaderProvider {
         VideoFiltering.SCANLINES to ShaderProgramSource.ScanlinesShader,
     )
 
-    fun getShaderSource(filtering: VideoFiltering): ShaderProgramSource =
-        FILTERING_SHADER_MAP[filtering] ?: ShaderProgramSource.NoFilterShader
+    fun getShaderSource(filtering: VideoFiltering): ShaderProgramSource {
+    return FILTERING_SHADER_MAP[filtering]
+        ?: ShaderProgramSource.NoFilterShader
 }

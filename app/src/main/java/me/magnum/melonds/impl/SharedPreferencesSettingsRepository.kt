@@ -93,6 +93,7 @@ class SharedPreferencesSettingsRepository(
         preferences.registerOnSharedPreferenceChangeListener(this)
         setDefaultThemeIfRequired()
         setDefaultMacAddressIfRequired()
+        createGlobalShaderFolder()
 
         renderConfigurationFlow = combine(
             getVideoRenderer(),
@@ -597,4 +598,16 @@ class SharedPreferencesSettingsRepository(
     override fun observeRenderConfiguration(): Flow<RendererConfiguration> {
         return renderConfigurationFlow
     }
+
+    private fun createGlobalShaderFolder() {
+    val externalFilesDir = context.getExternalFilesDir(null)
+    val shaderDir = File(externalFilesDir, "shaders")
+
+    if (!shaderDir.isDirectory) {
+        shaderDir.mkdirs()
+    }
 }
+
+
+
+
