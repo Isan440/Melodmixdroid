@@ -132,7 +132,7 @@ class DSRenderer(private val context: Context) : EmulatorRenderer {
         backgroundVao = vaos[1]
 
         // Create background shader
-        backgroundShader = ShaderFactory.createShaderProgram(ShaderProgramSource.BackgroundShader)
+        backgroundShader = ShaderFactory.createShaderProgram(context, ShaderProgramSource.BackgroundShader)
 
         synchronized(configurationLock) {
             mustUpdateConfiguration = true
@@ -227,7 +227,7 @@ class DSRenderer(private val context: Context) : EmulatorRenderer {
 
         val filtering = rendererConfiguration?.videoFiltering ?: VideoFiltering.NONE
         val shaderSource = VideoFilterShaderProvider.getShaderSource(filtering)
-        screenShader = ShaderFactory.createShaderProgram(shaderSource)
+        screenShader = ShaderFactory.createShaderProgram(context, shaderSource)
     }
 
     override fun onSurfaceChanged(width: Int, height: Int) {

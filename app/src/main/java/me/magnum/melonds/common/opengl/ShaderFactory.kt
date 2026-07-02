@@ -3,17 +3,22 @@ package me.magnum.melonds.common.opengl
 import android.opengl.GLES30
 import android.util.Log
 import java.io.File
+import android.content.Context
 
 object ShaderFactory {
-    fun createShaderProgram(source: ShaderProgramSource): Shader {
+    fun createShaderProgram(
+    context: Context,
+    source: ShaderProgramSource
+    ): Shader {
+    
     val shaderSource = source
 
     val vertexCode =
-        ExternalShaderLoader.loadShader(App.context, "vertex.glsl")
+        ExternalShaderLoader.loadShader(context, "vertex.glsl")
         ?: shaderSource.vertexShaderSource    
 
     val fragmentCode =
-        ExternalShaderLoader.loadShader(App.context, "fragment.glsl")
+        ExternalShaderLoader.loadShader(context, "fragment.glsl")
         ?: shaderSource.fragmentShaderSource    
 
     val vertexShader = createShader(

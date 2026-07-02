@@ -152,9 +152,7 @@ class ExternalLayoutRender(
     }
 
     override fun onSurfaceCreated() {
-        shader = ShaderFactory.createShaderProgram(
-            VideoFilterShaderProvider.getShaderSource(videoFiltering)
-        )
+        shader = ShaderFactory.createShaderProgram(context, VideoFilterShaderProvider.getShaderSource(videoFiltering))
 
         val textures = IntArray(1)
         GLES30.glGenTextures(1, textures, 0)
@@ -165,7 +163,7 @@ class ExternalLayoutRender(
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR)
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR)
 
-        backgroundShader = ShaderFactory.createShaderProgram(ShaderProgramSource.BackgroundShader)
+        backgroundShader = ShaderFactory.createShaderProgram(context, ShaderProgramSource.BackgroundShader)
         val lineRelativeSize = 1f / (TOTAL_SCREEN_HEIGHT + 2).toFloat()
         val topUvs = floatArrayOf(
             0f, 0.5f - lineRelativeSize,
@@ -260,7 +258,7 @@ class ExternalLayoutRender(
         if (this::shader.isInitialized) {
             shader.delete()
             shader = ShaderFactory.createShaderProgram(
-                VideoFilterShaderProvider.getShaderSource(videoFiltering)
+                VideoFilterShaderProvider.getShaderSource(context, videoFiltering)
             )
         }
     }
