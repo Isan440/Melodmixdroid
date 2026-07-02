@@ -258,7 +258,7 @@ class ExternalLayoutRender(
         if (this::shader.isInitialized) {
             shader.delete()
             shader = ShaderFactory.createShaderProgram(
-                VideoFilterShaderProvider.getShaderSource(videoFiltering)
+               context,  VideoFilterShaderProvider.getShaderSource(videoFiltering)
             )
         }
     }
