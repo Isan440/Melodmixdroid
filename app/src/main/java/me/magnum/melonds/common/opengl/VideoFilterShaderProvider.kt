@@ -18,3 +18,5 @@ object VideoFilterShaderProvider {
     return FILTERING_SHADER_MAP[filtering]
         ?: ShaderProgramSource.NoFilterShader
 }
+
+}
