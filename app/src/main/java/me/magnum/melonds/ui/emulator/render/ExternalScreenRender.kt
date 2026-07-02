@@ -47,6 +47,7 @@ class ExternalScreenRender(
 
     override fun onSurfaceCreated() {
         shader = ShaderFactory.createShaderProgram(
+            context,
             VideoFilterShaderProvider.getShaderSource(videoFiltering)
         )
 
@@ -156,7 +157,7 @@ class ExternalScreenRender(
         shader?.delete()
 
         val shaderSource = VideoFilterShaderProvider.getShaderSource(videoFiltering)
-        shader = ShaderFactory.createShaderProgram(shaderSource)
+        shader = ShaderFactory.createShaderProgram(context, shaderSource)
     }
 
     override fun onSurfaceChanged(width: Int, height: Int) {
